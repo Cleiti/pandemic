@@ -1,11 +1,14 @@
-import tkinter as tk
-from random import uniform, randint
+from random import uniform
 from math import sqrt
 
 
 class Person:
-    def __init__(self, canvas, x, y):
-        self.is_sick = False
+    radius = 30
+
+    def __init__(self, canvas, x, y, is_sick=False, speed=5, window_size=500):
+        self.speed = speed
+        self.is_sick = is_sick
+        self.window_size = window_size
         if self.is_sick:
             self.color = "red"
             self.outline = "red"
@@ -18,26 +21,26 @@ class Person:
         self.x = x
         self.y = y
 
-        self.x_velocity = uniform(-1, 1)
-        self.y_velocity = uniform(-1, 1)
+        self.x_velocity = 0
+        self.y_velocity = 0
 
+        # creating initial dx, dy values (direction)
         while self.x_velocity == 0 and self.y_velocity == 0:  # avoiding (0,0) values
             self.x_velocity = uniform(-1, 1)
             self.y_velocity = uniform(-1, 1)
-        cur_speed = self.y_velocity**2 + self.x_velocity**2
-        adj_fact = sqrt((Person.speed**2)/cur_speed)
+
+        # normalizing speed and setting new speed
+        cur_speed2 = self.y_velocity**2 + self.x_velocity**2
+        adj_fact = sqrt((self.speed**2)/cur_speed2)
         self.x_velocity = self.x_velocity*adj_fact
         self.y_velocity = self.y_velocity*adj_fact
 
-        self.circle = canvas.create_oval([self.x, self.y, self.x+self.size, self.y+self.size], outline=self.outline,
-                                         fill=self.color)
-
-    size = 30
-    amount = 30
-    speed = 15
+        self.circle = canvas.create_oval([self.x, self.y, self.x+Person.radius, self.y+Person.radius],
+                                         outline=self.outline, fill=self.color)
 
     def move(self):
-
+        # print(f'dx={self.x_velocity}, dy={self.y_velocity}')
+        # print(f'v={self.x_velocity**2+self.y_velocity**2}')
         self.canvas.move(self.circle, self.x_velocity, self.y_velocity)
 
         coordinates = self.canvas.coords(self.circle)
@@ -45,69 +48,18 @@ class Person:
         self.y = coordinates[1]
 
         # if outside screen bounce
-        if self.x < 0 or self.x > (500 - Person.size):
+        if self.x < 0 or self.x > (self.window_size - Person.radius):
             self.x_velocity = -self.x_velocity
-        if self.y < 0 or self.y > (500 - Person.size):
+        if self.y < 0 or self.y > (self.window_size - Person.radius):
             self.y_velocity = -self.y_velocity
 
+        # print(f'my speed = {sqrt(self.y_velocity**2 + self.x_velocity**2)}')
 
-def start():
-    """starting process"""
-    pass
-    # TODO: finish start() function
+    def distance(self, other):
+        return sqrt((self.x-other.x)**2 + (self.y-other.y)**2)
 
-
-def stop():
-    """stopping process"""
-    pass
-    # TODO: finish stop() function
-
-
-def move():
-    for item in people:
-        item.move()
-
-    window.after(33, move)
-
-
-# --- main ---
-
-# creating canvas and buttons
-window = tk.Tk()
-canvas = tk.Canvas(window, bg="white", height=500, width=500)
-startb = tk.Button(window, text="Start", command=start())
-stopb = tk.Button(window, text="Stop", command=stop())
-
-# creating variables for storing text from input widgets
-speed_var = tk.StringVar()
-amount_var = tk.StringVar()
-
-speedlbl = tk.Label(window, text="Enter speed")
-speedentry = tk.Entry(window, textvariable=speed_var)
-amountlbl = tk.Label(window, text="Enter amount")
-amountentry = tk.Entry(window,  textvariable=amount_var)
-
-# packing content
-startb.pack(side='top')
-stopb.pack(side='top')
-speedlbl.pack(side='top')
-speedentry.pack(side='top')
-amountlbl.pack(side='top')
-amountentry.pack(side='top')
-canvas.pack()
-
-# getting variables from text fields
-if speed_var.get():
-    Person.speed = int(speed_var.get())
-if amount_var.get():
-    Person.amount = int(amount_var.get())
-
-# creating objects
-people = []
-for i in range(Person.amount):
-    p = Person(canvas, randint(0+Person.size, 500-Person.size), randint(0+Person.size, 500-Person.size))
-    people.append(p)
-
-move()
-
-window.mainloop()
+    def set_speed(self, speed):
+        cur_speed2 = self.y_velocity**2 + self.x_velocity**2
+        adj_fact = sqrt((speed**2)/cur_speed2)
+        self.x_velocity = self.x_velocity*adj_fact
+        self.y_velocity = self.y_velocity*adj_fact
